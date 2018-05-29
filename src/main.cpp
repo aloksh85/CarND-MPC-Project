@@ -2,6 +2,7 @@
 #include <uWS/uWS.h>
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
@@ -11,7 +12,7 @@
 
 // for convenience
 using json = nlohmann::json;
-
+using namespace std;
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -92,6 +93,15 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+          for (const auto& x:ptsx) {
+            cout<<x<<",";
+          }
+          cout<<endl;
+          for (const auto& y:ptsy) {
+            cout<<y<<",";
+          }
+          cout<<endl;
+          cout<<"px: "<<px<<",py: "<<py<<", psi: "<<psi<<", v: "<<v<<endl;
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -107,7 +117,7 @@ int main() {
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
-          //Display the MPC predicted trajectory 
+          //Display the MPC predicted trajectory
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
