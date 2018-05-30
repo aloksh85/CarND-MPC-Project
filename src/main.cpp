@@ -111,13 +111,13 @@ int main() {
 
           auto coeffs = polyfit(ptsx_c,ptsy_c,1);
           // compute cte
-          double cte = py - polyeval(coeffs,0.0);
+          double cte = polyeval(coeffs,0.0);
 
           //compute epsi
-          double epsi = psi - atan(coeffs[1]); // 1st order polynaomial
+          double epsi = - atan(coeffs[1]); // 1st order polynaomial
           Eigen::VectorXd state(6);
-          
-          state<<px,py,psi,v,cte,epsi;
+
+          state<<0,0,0,v,cte,epsi;
 
           vector<double>mpc_solutions = mpc.Solve(state,coeffs);
           cout<<"mpc solution size: "<<mpc_solutions.size()<<endl;
@@ -127,13 +127,13 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value = -1*mpc_solutions[6];
-          double throttle_value =mpc_solutions[7];
+          double throttle_value = mpc_solutions[1];
+          double steer_value = -1*mpc_solutions[0];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
+          msgJson["steering_angle"] = steer_value/deg2rad(25);
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory
@@ -142,9 +142,18 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-
+          for( unsigned int i=2;i<mpc_solutions.size();++i) {
+            if(i%2==0) {
+              mpc_x_vals.push_back(mpc_solutions[i]);
+            }
+            else{
+              mpc_y_vals.push_back(mpc_solutions[i]);
+            }
+          }
+          
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
+
 
           //Display the waypoints/reference line
           msgJson["next_x"] = next_x_vals;

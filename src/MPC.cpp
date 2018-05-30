@@ -7,7 +7,7 @@ using CppAD::AD;
 
 // TODO: Set the timestep length and duration
 const size_t N = 25.0;
-const double dt = 0.05;
+const double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -55,11 +55,11 @@ class FG_eval {
 
     for(int t= 0; t< N-1;++t) {
       fg[0]+= CppAD::pow(vars[delta_start+t],2);
-      fg[0]+=CppAD::pow(vars[a_start+t],2);
+      fg[0]+= CppAD::pow(vars[a_start+t],2);
     }
 
     for (int t = 0; t < N-2; ++t) {
-      fg[0]+= 500*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
+      fg[0]+= 100*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
       fg[0]+= CppAD::pow(vars[a_start+t]-vars[a_start+t+1],2);
     }
 
@@ -237,9 +237,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
-  vector<double> mpc_solution;
-  for(unsigned int i=0; i< solution.x.size();++i) {
-    mpc_solution.push_back(solution.x[i]);
-  }
-  return mpc_solution;
+ vector<double> mpc_solution = {solution.x[delta_start],   solution.x[a_start]};
+ for(unsigned int t=0; t<N;++t) {
+   mpc_solution.push_back(solution.x[x_start+t]);
+   mpc_solution.push_back(solution.x[y_start+t]);
+ }
+
+ return mpc_solution;
 }
