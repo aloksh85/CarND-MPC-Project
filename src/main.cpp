@@ -105,11 +105,11 @@ int main() {
             double dy = ptsy[i]-py;
             next_x_vals.push_back(dx*cos(-psi)-dy*sin(-psi));
             next_y_vals.push_back(dx*sin(-psi)+dy*cos(-psi));
-            ptsx_c[i]=  next_x_vals[i];
-            ptsy_c[i]=  next_y_vals[i];
+            ptsx_c[i]=  dx*cos(-psi)-dy*sin(-psi);
+            ptsy_c[i]=  dx*sin(-psi)+dy*cos(-psi);
           }
 
-          auto coeffs = polyfit(ptsx_c,ptsy_c,2);
+          auto coeffs = polyfit(ptsx_c,ptsy_c,3);
           // compute cte
           double cte = polyeval(coeffs,0.0);
 
@@ -117,7 +117,7 @@ int main() {
           double epsi = -atan(coeffs[1]); // 1st order polynaomial
           Eigen::VectorXd state(6);
 
-          state<<0,0,0,v,cte,epsi;
+          state<<0,0,0,v,cte,epsi; // everything is in car refe frame
 
           vector<double>mpc_solutions = mpc.Solve(state,coeffs);
           /*
@@ -161,6 +161,7 @@ int main() {
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
+          std::cout<<"CTE: "<<cte<<std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
