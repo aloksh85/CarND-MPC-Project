@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-const size_t N = 25.0;
-const double dt = 0.1;
+const size_t N = 8.0;
+const double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -48,7 +48,7 @@ class FG_eval {
     // TODO: Define the cost related the reference state and
     // any anything you think may be beneficial.
     for (int t=0;t< N;++t) {
-      fg[0]+= CppAD::pow(vars[cte_start+t],2);
+      fg[0]+= 100*CppAD::pow(vars[cte_start+t],2);
       fg[0]+= CppAD::pow(vars[epsi_start+t],2);
       fg[0]+= CppAD::pow(vars[v_start+t]-ref_v,2);
     }
@@ -59,7 +59,7 @@ class FG_eval {
     }
 
     for (int t = 0; t < N-2; ++t) {
-      fg[0]+= 100*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
+      fg[0]+= 500*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
       fg[0]+= CppAD::pow(vars[a_start+t]-vars[a_start+t+1],2);
     }
 
@@ -109,10 +109,7 @@ class FG_eval {
       AD<double> psides0 = CppAD::atan(coeffs[1]);
       fg[1 + cte_start + t] = cte1 - ((f0 - y0)+v0*CppAD::sin(epsi0)*dt);
       fg[1 + epsi_start + t] = epsi1 - (psides0 - psi0) + (v0/Lf)*delta0*dt;
-
     }
-
-
   }
 };
 
@@ -234,9 +231,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // TODO: Return the first actuator values. The variables can be accessed with
   // `solution.x[i]`.
-  //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
+
  vector<double> mpc_solution = {solution.x[delta_start],   solution.x[a_start]};
  for(unsigned int t=0; t<N;++t) {
    mpc_solution.push_back(solution.x[x_start+t]);

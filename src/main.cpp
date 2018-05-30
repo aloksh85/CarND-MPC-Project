@@ -105,22 +105,21 @@ int main() {
             double dy = ptsy[i]-py;
             next_x_vals.push_back(dx*cos(-psi)-dy*sin(-psi));
             next_y_vals.push_back(dx*sin(-psi)+dy*cos(-psi));
-            ptsx_c[i]=next_x_vals[i];
+            ptsx_c[i]=  next_x_vals[i];
             ptsy_c[i]=  next_y_vals[i];
           }
 
-          auto coeffs = polyfit(ptsx_c,ptsy_c,1);
+          auto coeffs = polyfit(ptsx_c,ptsy_c,2);
           // compute cte
           double cte = polyeval(coeffs,0.0);
 
           //compute epsi
-          double epsi = - atan(coeffs[1]); // 1st order polynaomial
+          double epsi = -atan(coeffs[1]); // 1st order polynaomial
           Eigen::VectorXd state(6);
 
           state<<0,0,0,v,cte,epsi;
 
           vector<double>mpc_solutions = mpc.Solve(state,coeffs);
-          cout<<"mpc solution size: "<<mpc_solutions.size()<<endl;
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
@@ -150,7 +149,7 @@ int main() {
               mpc_y_vals.push_back(mpc_solutions[i]);
             }
           }
-          
+
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
 
