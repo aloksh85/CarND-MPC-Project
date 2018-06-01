@@ -1,0 +1,42 @@
+Implementation details:
+
+Model:
+This project uses the bicycle model to represent the car dynamics
+State of the car is defined as : [x,y,psi(heading),v(speed)]
+Control/actuator variables for the car are:  [delta (steering_angle), a (acceleration)]
+
+The prediction equations are as follows:
+x1 = x0 + v0*cos(psi0)*dt
+y1 = y0 + v0*sin(psi0)*dt
+ps1 = psi0 + (v0/Lf)*delta0*dt
+v1 = v0 + a*dt
+
+where Lf: the distance between the center of mass of the vehicle and it's front axle
+where dt: time elapsed between timesteps
+
+
+Choice of N(time step length) and dt(elapsed time between steps):
+
+I chose N to be 5 and
+dt to be 0.1 (100 milliseconds)
+
+I arrived at these values based on experimenting with different values and thinking about how much further we should  predict in a realistic driving scenario
+Starting at N = 25, I reduced it in steps of 5, all the way to 5.
+I did not see the performance getting affected much in terms and it reduced the amount of computing required
+
+For the timestep, I experimented with values starting at 0.05 and increased it in steps to 0.1
+I observed that with a time-step of 0.1, the model's predictions were good enough to drive around the track.
+With a smaller time-step value, I saw a lot of oscillations and with a time-step greater than 0.1, the predicted trajectory did not look stable
+
+
+Polynomial Fitting
+I used provide polyfit function to fit a 3rd degree polynomial to the waypoints
+The 3 degree polynomial has enough flexibility to adapt well to  changing track geometry
+In the future I would like to pore-process the waypoints to interpolate between waypoints that a large distance apart.
+This should provide a better fitting polynomial
+
+
+Latency
+In my experiments, to deal with latency setting the dt to 0.1 gives me a state prediction that is valid after 100ms.
+This takes care of the latency well enough
+Otherwise I experimented with adding 100 milliseconds to dt in order to compensate for latency
