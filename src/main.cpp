@@ -92,6 +92,10 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          //  change of sign because turning left is negative sign in simulator but positive yaw for MPC
+          double delta = -j[1]["steering_angle"];
+          double a = -j[1]["acceleration"];
+
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
@@ -109,7 +113,7 @@ int main() {
             ptsy_c[i]=  dx*sin(-psi)+dy*cos(-psi);
           }
 
-          auto coeffs = polyfit(ptsx_c,ptsy_c,3);
+          auto coeffs = polyfit(ptsx_c,ptsy_c,1); // use a 1st order polynomial fitting
           // compute cte
           double cte = polyeval(coeffs,0.0);
 
@@ -117,7 +121,18 @@ int main() {
           double epsi = -atan(coeffs[1]); // 1st order polynaomial
           Eigen::VectorXd state(6);
 
-          state<<0,0,0,v,cte,epsi; // everything is in car refe frame
+          v*=0.44704;//to convert miles per hour to meter per second
+          // extrapolate state to account for latency =100ms
+
+          psi = delta; // in vehicle coordinate now, so use steering angle to predict x and y
+          px = 0.0+ v*cos(psi)*0.1;
+          py = 0.0 + v*sin(psi)*0.1;
+          cte= cte + v*sin(epsi)*0.1;
+          epsi = epsi + v*delta*0.1/Lf;
+          psi = 0.0 + v*delta*0.1/Lf;
+          v = v + a*0.1;
+
+          state<<px,py,psi,v,cte,epsi; // everything is in car refe frame
 
           vector<double>mpc_solutions = mpc.Solve(state,coeffs);
           /*
