@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-const size_t N = 5.0;
+const size_t N = 10.0;
 const double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
@@ -20,8 +20,7 @@ const double dt = 0.1;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
-
-const double ref_v = 25.0;
+const double ref_v = 70.0; //convert mph to mps
 
 const size_t x_start = 0;
 const size_t y_start = x_start + N;
@@ -47,10 +46,12 @@ class FG_eval {
     // Reference State Cost
     // TODO: Define the cost related the reference state and
     // any anything you think may be beneficial.
+    fg[0]=0;
+
     for (unsigned int t=0;t< N;++t) {
-      fg[0]+= CppAD::pow(vars[cte_start+t],2);
-      fg[0]+= CppAD::pow(vars[epsi_start+t],2);
-      fg[0]+= 0.5*CppAD::pow(vars[v_start+t]-ref_v,2);
+      fg[0]+= 2000*CppAD::pow(vars[cte_start+t],2);
+      fg[0]+= 2000*CppAD::pow(vars[epsi_start+t],2);
+      fg[0]+= CppAD::pow(vars[v_start+t]-ref_v,2);
     }
 
     for(unsigned int t= 0; t< N-1;++t) {
@@ -59,7 +60,7 @@ class FG_eval {
     }
 
     for (unsigned int t = 0; t < N-2; ++t) {
-      fg[0]+= 500*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
+      fg[0]+= 200*CppAD::pow(vars[delta_start+t] - vars[delta_start+t+1],2);
       fg[0]+= CppAD::pow(vars[a_start+t]-vars[a_start+t+1],2);
     }
 
@@ -82,8 +83,6 @@ class FG_eval {
       AD<double> cte1 = vars[cte_start + t];
       AD<double> epsi1 = vars[epsi_start + t];
 
-
-
       AD<double> x0 = vars[x_start + t - 1];
       AD<double> psi0 = vars[psi_start + t - 1];
       AD<double> v0 = vars[v_start + t - 1];
@@ -92,7 +91,8 @@ class FG_eval {
       AD<double> epsi0 = vars[epsi_start + t - 1];
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
-
+      AD<double> f0 = coeffs[0] + coeffs[1]*x0 + coeffs[2]*x0*x0 + coeffs[3]*x0*x0*x0;
+      AD<double> psides0 = CppAD::atan(3*coeffs[3]*x0*x0 +2*coeffs[2]*x0+coeffs[1]);
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
       //
@@ -104,11 +104,9 @@ class FG_eval {
       fg[1 + x_start + t] = x1 - (x0 + v0 *CppAD::cos(psi0) * dt);
       fg[1 + y_start + t] = y1 -(y0+v0*CppAD::sin(psi0)*dt);
       fg[1 + v_start + t] = v1 -(v0+ a0*dt);
-      fg[1 + psi_start + t] = psi1 - (psi0 + (v0/Lf)*delta0*dt);
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+      fg[1 + psi_start + t] = psi1 - (psi0 - (v0/Lf)*delta0*dt);
       fg[1 + cte_start + t] = cte1 - ((f0 - y0)+v0*CppAD::sin(epsi0)*dt);
-      fg[1 + epsi_start + t] = epsi1 - (psides0 - psi0) + (v0/Lf)*delta0*dt;
+      fg[1 + epsi_start + t] = epsi1 - ((psi0  - psides0) - (v0/Lf)*delta0*dt);
     }
   }
 };
@@ -160,8 +158,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (unsigned  int i = delta_start; i < a_start; i++) {
-    vars_lowerbound[i] = -0.436332;
-    vars_upperbound[i] = 0.436332;
+    vars_lowerbound[i] = -0.436332*Lf;
+    vars_upperbound[i] = 0.436332*Lf;
   }
 
   // Acceleration/decceleration upper and lower limits.
@@ -234,7 +232,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // creates a 2 element double vector.
 
  vector<double> mpc_solution = {solution.x[delta_start],   solution.x[a_start]};
- for(unsigned int t=0; t<N;++t) {
+ for(unsigned int t=1; t<N;++t) {
    mpc_solution.push_back(solution.x[x_start+t]);
    mpc_solution.push_back(solution.x[y_start+t]);
  }
