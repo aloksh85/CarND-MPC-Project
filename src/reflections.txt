@@ -20,6 +20,9 @@ Choice of N(time step length) and dt(elapsed time between steps):
 I chose N to be 5 and
 dt to be 0.1 (100 milliseconds)
 
+After initial project review, I have reset N to be 10 so the controller now looks 10 timesteps ahead
+Hence giving it a 1 second look ahead. This setting is a nice compromise between accuracy and computation speed 
+
 I arrived at these values based on experimenting with different values and thinking about how much further we should  predict in a realistic driving scenario
 Starting at N = 25, I reduced it in steps of 5, all the way to 5.
 I did not see the performance getting affected much in terms and it reduced the amount of computing required
